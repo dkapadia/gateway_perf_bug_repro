@@ -20,13 +20,12 @@ app.get("/test-backend", asyncHandler(async (req, res) => {
 
 // Hit the test-backend service in the ka project
 app.get("/ka-test-backend", asyncHandler(async (req, res) => {
-    const httpResponse = await doRequest("https://mobile-data-dot-khan-academy.appspot.com/backend-graphql/testDhruv")
+    const httpResponse = await doRequest("https://test-backend-dot-khan-academy.appspot.com/ping")
     const actual = await httpResponse.json()
-    const expected = JSON.stringify({isOnZeroRatedNetwork: false})
 
-    if(JSON.stringify(actual.data) != expected){
+    if(actual !== "pong\n"){
         res.status(500);
-        res.send("ERROR");
+        res.send(`ERROR! got: ${actual} expected: pong`);
         return
     }
 

@@ -4,27 +4,56 @@ const fetch = require("node-fetch");
 const app = express()
 const port = process.env.PORT || 3000
 
-function logResponseTime(req, res, next) {
-  const startHrTime = process.hrtime();
+// Hit the test-backend service in our test project
+app.get("/test-backend", asyncHandler(async (req, res) => {
+    const httpResponse = await doRequest("https://test-backend-dot-dhruv-test-2019.appspot.com/ping")
+    const actual = await httpResponse.text()
 
-  res.on("finish", () => {
-    const elapsedHrTime = process.hrtime(startHrTime);
-    const elapsedTimeInMs = elapsedHrTime[0] * 1000 + elapsedHrTime[1] / 1e6;
-    if(elapsedTimeInMs > 20000){
-        console.log("%s : %fms", req.path, elapsedTimeInMs);
+    if(actual !== "pong\n"){
+        res.status(500);
+        res.send(`ERROR! got: ${actual} expected: pong`);
+        return
     }
-  });
 
-  next();
-}
+    res.send("ok\n");
+}))
 
-// We don't want this in prod
-//app.use(logResponseTime)
-
-app.get("/kaprod", asyncHandler(async (req, res) => {
-    const url = "https://mobile-data-dot-khan-academy.appspot.com/backend-graphql/testDhruv"
+// Hit the test-backend service in the ka project
+app.get("/ka-test-backend", asyncHandler(async (req, res) => {
+    const httpResponse = await doRequest("https://mobile-data-dot-khan-academy.appspot.com/backend-graphql/testDhruv")
+    const actual = await httpResponse.json()
     const expected = JSON.stringify({isOnZeroRatedNetwork: false})
 
+    if(JSON.stringify(actual.data) != expected){
+        res.status(500);
+        res.send("ERROR");
+        return
+    }
+
+    res.send("ok\n");
+}))
+
+// Hit an actual khan academy service in the khan academy project
+app.get("/ka-mobile-data", asyncHandler(async (req, res) => {
+    const httpResponse = await doRequest("https://mobile-data-dot-khan-academy.appspot.com/backend-graphql/testDhruv")
+    const actual = await httpResponse.json()
+    const expected = JSON.stringify({isOnZeroRatedNetwork: false})
+
+    if(JSON.stringify(actual.data) != expected){
+        res.status(500);
+        res.send("ERROR");
+        return
+    }
+
+    res.send("ok\n");
+}))
+
+
+
+async function doRequest(url) {
+
+    // To keep things consistent, we always do a post, even though only the
+    // ka-mobile-data backend expects a request payload.
     const body = JSON.stringify({
         query:"{isOnZeroRatedNetwork}"
     })
@@ -40,15 +69,7 @@ app.get("/kaprod", asyncHandler(async (req, res) => {
     }
     const httpResponse = await fetch(url, options)
 
-    const actual = await httpResponse.json()
-
-    if(JSON.stringify(actual.data) != expected){
-        res.status(500);
-        res.send("ERROR");
-        return
-    }
-    res.send("ok\n");
-}))
-
+    return httpResponse
+}
 
 app.listen(port, () => console.log(`Server started on port ${port}`))

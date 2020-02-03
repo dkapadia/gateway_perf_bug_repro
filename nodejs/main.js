@@ -47,7 +47,7 @@ app.get("/kaprod", asyncHandler(async (req, res) => {
         res.send("ERROR");
         return
     }
-    res.send("pong\n");
+    res.send("ok\n");
 }))
 
 

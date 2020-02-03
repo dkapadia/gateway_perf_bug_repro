@@ -2,7 +2,7 @@ const express = require('express')
 const asyncHandler = require("express-async-handler")
 const fetch = require("node-fetch");
 const app = express()
-const port = 3000
+const port = process.env.PORT || 3000
 
 function logResponseTime(req, res, next) {
   const startHrTime = process.hrtime();
